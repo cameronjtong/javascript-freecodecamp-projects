@@ -14,10 +14,8 @@ const ROMAN_NUMERALS = [
   [1, "I"],
 ];
 
-function convertToRoman(num) {
+export function convertToRoman(num) {
   if (num === 0) return "";
   let [value, numeral] = ROMAN_NUMERALS.find(([value]) => value <= num);
   return numeral + convertToRoman(num - value);
 }
-
-convertToRoman(36);
