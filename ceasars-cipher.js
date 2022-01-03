@@ -26,15 +26,7 @@ const LETTERS = {
   Y: "L",
   Z: "M",
 };
-function rot13(str) {
-  let chars = str.split("");
-  let newChars = chars.map((element) => {
-    if (LETTERS.hasOwnProperty(element)) {
-      return LETTERS[element];
-    }
-    return element;
-  });
-  return newChars.join("");
+export function rot13(str) {
+  let chars = str.toUpperCase().split("");
+  return chars.map((element) => LETTERS[element] || element).join("");
 }
-
-rot13("SERR PBQR PNZC");
