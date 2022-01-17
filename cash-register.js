@@ -10,7 +10,7 @@ const MONEY = [
   ["ONE HUNDRED", 10000],
 ];
 
-function checkCashRegister(price, cash, cid) {
+export default function checkCashRegister(price, cash, cid) {
   let returnAmt = cash * 100 - price * 100;
   let availableCash = {};
   let change = {};
