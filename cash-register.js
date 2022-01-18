@@ -10,51 +10,52 @@ const MONEY = [
   ["ONE HUNDRED", 10000],
 ];
 
-export default function checkCashRegister(price, cash, cid) {
+export default function checkCashRegister(price, cash, cashInDrawer) {
   let returnAmt = cash * 100 - price * 100;
-  let availableCash = {};
+  let availableCash = calculateAvailableCash(cashInDrawer);
   let change = {};
 
-  cid.forEach((element) => {
-    availableCash[element[0]] = element[1] * 100;
-  });
-
-  let index = MONEY.length - 1;
-  // Iterate from highest money type to lowest
-  while (index >= 0 && returnAmt > 0) {
-    let value = MONEY[index][1];
-    let name = MONEY[index][0];
-
+  [...MONEY].reverse().forEach(([denomination, value]) => {
     if (returnAmt - value > 0) {
-      change[name] = 0;
-      while (availableCash[name] > 0 && returnAmt - value >= 0) {
-        availableCash[name] -= value;
-        change[name] += value;
+      change[denomination] = 0;
+      while (availableCash[denomination] > 0 && returnAmt - value >= 0) {
+        availableCash[denomination] -= value;
+        change[denomination] += value;
         returnAmt -= value;
       }
     }
-    index -= 1;
+  });
+
+  if (returnAmt !== 0) {
+    return { status: "INSUFFICIENT_FUNDS", change: [] };
   }
-  if (returnAmt === 0) {
-    let registerEmpty = true;
-    // if we have any money left in the register this must be set to false
-    Object.keys(availableCash).forEach((type) => {
-      if (availableCash[type] > 0) {
-        registerEmpty = false;
-      }
-    });
-    if (registerEmpty) {
-      return { status: "CLOSED", change: cid };
-    } else {
-      let result = [];
-      Object.keys(change).map((type) => {
-        if (change[type] > 0) {
-          result.push([type, change[type] / 100]);
-        }
-      });
-      return { status: "OPEN", change: result };
+  if (isRegisterClosed(availableCash)) {
+    return { status: "CLOSED", change: cashInDrawer };
+  }
+
+  let result = [];
+  Object.keys(change).map((type) => {
+    if (change[type] > 0) {
+      result.push([type, change[type] / 100]);
     }
-  }
-  // default case
-  return { status: "INSUFFICIENT_FUNDS", change: [] };
+  });
+  return { status: "OPEN", change: result };
+}
+
+function calculateAvailableCash(cashInDrawer) {
+  let result = {};
+  cashInDrawer.forEach(([denomination, quantity]) => {
+    result[denomination] = quantity * 100;
+  });
+  return result;
+}
+
+function isRegisterClosed(availableCash) {
+  let result = true;
+  Object.keys(availableCash).forEach((type) => {
+    if (availableCash[type] > 0) {
+      result = false;
+    }
+  });
+  return result;
 }
