@@ -1,7 +1,7 @@
 import checkCashRegister from "./cash-register";
 
 describe("cash register", () => {
-  test("case 1", () => {
+  test("gives change of one denomination with cash remaining in register", () => {
     expect(
       checkCashRegister(19.5, 20, [
         ["PENNY", 1.01],
@@ -17,7 +17,7 @@ describe("cash register", () => {
     ).toEqual({ change: [["QUARTER", 0.5]], status: "OPEN" });
   });
 
-  test("case 2", () => {
+  test("gives change of multiple types with cash remaining in register", () => {
     expect(
       checkCashRegister(3.26, 100, [
         ["PENNY", 1.01],
@@ -44,7 +44,7 @@ describe("cash register", () => {
     });
   });
 
-  test("case 3", () => {
+  test("handles insufficient funds", () => {
     expect(
       checkCashRegister(19.5, 20, [
         ["PENNY", 0.01],
@@ -60,7 +60,7 @@ describe("cash register", () => {
     ).toEqual({ status: "INSUFFICIENT_FUNDS", change: [] });
   });
 
-  test("case 4", () => {
+  test("handles insufficient funds case 2", () => {
     expect(
       checkCashRegister(19.5, 20, [
         ["PENNY", 0.01],
@@ -76,7 +76,7 @@ describe("cash register", () => {
     ).toEqual({ status: "INSUFFICIENT_FUNDS", change: [] });
   });
 
-  test("case 5", () => {
+  test("handles full cash register usage", () => {
     expect(
       checkCashRegister(19.5, 20, [
         ["PENNY", 0.5],

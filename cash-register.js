@@ -11,51 +11,54 @@ const MONEY = [
 ];
 
 export default function checkCashRegister(price, cashGiven, cashInDrawer) {
-  let amountToReturn = cashGiven * 100 - price * 100;
-  let availableCash = calculateAvailableCash(cashInDrawer);
-  let change = {};
+  return formatChange(calculateChange());
 
-  [...MONEY].reverse().forEach(([denomination, value]) => {
-    if (amountToReturn - value > 0) {
-      change[denomination] = 0;
-      while (availableCash[denomination] > 0 && amountToReturn - value >= 0) {
-        availableCash[denomination] -= value;
-        change[denomination] += value;
-        amountToReturn -= value;
+  function calculateChange() {
+    let amountToReturn = cashGiven * 100 - price * 100;
+    let availableCash = calculateAvailableCash(cashInDrawer);
+    let change = {};
+
+    [...MONEY].reverse().forEach(([denomination, value]) => {
+      if (amountToReturn - value > 0) {
+        change[denomination] = 0;
+        while (availableCash[denomination] > 0 && amountToReturn - value >= 0) {
+          availableCash[denomination] -= value;
+          change[denomination] += value;
+          amountToReturn -= value;
+        }
       }
-    }
-  });
-
-  if (amountToReturn !== 0) {
-    return { status: "INSUFFICIENT_FUNDS", change: [] };
-  }
-  if (isRegisterClosed(availableCash)) {
-    return { status: "CLOSED", change: cashInDrawer };
+    });
+    return { amountToReturn, availableCash, change };
   }
 
-  let result = [];
-  Object.entries(change).map(([denomination, amountOfDenomination]) => {
-    if (amountOfDenomination > 0) {
-      result.push([denomination, amountOfDenomination / 100]);
+  function formatChange(data) {
+    if (data.amountToReturn !== 0) {
+      return { status: "INSUFFICIENT_FUNDS", change: [] };
     }
-  });
-  return { status: "OPEN", change: result };
+    if (isTillEmpty(data.availableCash)) {
+      return { status: "CLOSED", change: cashInDrawer };
+    }
+
+    let result = Object.entries(data.change).reduce(
+      (acc, [denomination, amountOfDenomination]) => {
+        if (amountOfDenomination > 0) {
+          acc.push([denomination, amountOfDenomination / 100]);
+        }
+        return acc;
+      },
+      []
+    );
+    return { status: "OPEN", change: result };
+  }
 }
 
 function calculateAvailableCash(cashInDrawer) {
-  let result = {};
-  cashInDrawer.forEach(([denomination, quantity]) => {
-    result[denomination] = quantity * 100;
-  });
-  return result;
+  return cashInDrawer.reduce((acc, [denomination, quantity]) => {
+    acc[denomination] = quantity * 100;
+    return acc;
+  }, {});
 }
 
-function isRegisterClosed(availableCash) {
-  let result = true;
-  Object.keys(availableCash).forEach((type) => {
-    if (availableCash[type] > 0) {
-      result = false;
-    }
-  });
-  return result;
+function isTillEmpty(availableCash) {
+  return !Object.keys(availableCash).find((type) => availableCash[type] > 0);
 }
