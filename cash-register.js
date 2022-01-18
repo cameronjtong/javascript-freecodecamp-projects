@@ -10,23 +10,23 @@ const MONEY = [
   ["ONE HUNDRED", 10000],
 ];
 
-export default function checkCashRegister(price, cash, cashInDrawer) {
-  let returnAmt = cash * 100 - price * 100;
+export default function checkCashRegister(price, cashGiven, cashInDrawer) {
+  let amountToReturn = cashGiven * 100 - price * 100;
   let availableCash = calculateAvailableCash(cashInDrawer);
   let change = {};
 
   [...MONEY].reverse().forEach(([denomination, value]) => {
-    if (returnAmt - value > 0) {
+    if (amountToReturn - value > 0) {
       change[denomination] = 0;
-      while (availableCash[denomination] > 0 && returnAmt - value >= 0) {
+      while (availableCash[denomination] > 0 && amountToReturn - value >= 0) {
         availableCash[denomination] -= value;
         change[denomination] += value;
-        returnAmt -= value;
+        amountToReturn -= value;
       }
     }
   });
 
-  if (returnAmt !== 0) {
+  if (amountToReturn !== 0) {
     return { status: "INSUFFICIENT_FUNDS", change: [] };
   }
   if (isRegisterClosed(availableCash)) {
@@ -34,9 +34,9 @@ export default function checkCashRegister(price, cash, cashInDrawer) {
   }
 
   let result = [];
-  Object.keys(change).map((type) => {
-    if (change[type] > 0) {
-      result.push([type, change[type] / 100]);
+  Object.entries(change).map(([denomination, amountOfDenomination]) => {
+    if (amountOfDenomination > 0) {
+      result.push([denomination, amountOfDenomination / 100]);
     }
   });
   return { status: "OPEN", change: result };
