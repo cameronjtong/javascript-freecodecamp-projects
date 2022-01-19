@@ -11,25 +11,26 @@ const MONEY = [
 ];
 
 export default function checkCashRegister(price, cashGiven, cashInDrawer) {
-  return formatChange(calculateChange());
+  return formatChange(calculateChange(price, cashGiven, cashInDrawer));
+}
 
-  function calculateChange() {
-    let amountToReturn = cashGiven * 100 - price * 100;
-    let availableCash = calculateAvailableCash(cashInDrawer);
-    let change = {};
+function calculateChange(price, cashGiven, cashInDrawer) {
+  let amountToReturn = cashGiven * 100 - price * 100;
+  let availableCash = calculateAvailableCash(cashInDrawer);
+  let change = {};
 
-    [...MONEY].reverse().forEach(([denomination, value]) => {
-      if (amountToReturn - value > 0) {
-        change[denomination] = 0;
-        while (availableCash[denomination] > 0 && amountToReturn - value >= 0) {
-          availableCash[denomination] -= value;
-          change[denomination] += value;
-          amountToReturn -= value;
-        }
+  [...MONEY]
+    .reverse()
+    .filter(([, value]) => amountToReturn - value > 0)
+    .forEach(([denomination, value]) => {
+      change[denomination] = 0;
+      while (availableCash[denomination] > 0 && amountToReturn - value >= 0) {
+        availableCash[denomination] -= value;
+        change[denomination] += value;
+        amountToReturn -= value;
       }
     });
-    return { amountToReturn, availableCash, change, cashInDrawer };
-  }
+  return { amountToReturn, availableCash, change, cashInDrawer };
 }
 
 function formatChange(data) {
@@ -55,13 +56,30 @@ function isTillEmpty(availableCash) {
 }
 
 function format(change) {
-  return Object.entries(change).reduce(
-    (acc, [denomination, amountOfDenomination]) => {
-      if (amountOfDenomination > 0) {
-        acc.push([denomination, amountOfDenomination / 100]);
-      }
-      return acc;
-    },
-    []
-  );
+  const amountIsPresent = (amountOfDenomination) => amountOfDenomination > 0;
+  const convertAmountToDecimal = (amountOfDenomination) =>
+    amountOfDenomination / 100;
+  let result = pickBy(change, amountIsPresent);
+  result = transformValues(result, convertAmountToDecimal);
+  return toPairs(result);
+}
+
+function transformValues(object, callback) {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    acc[key] = callback(value);
+    return acc;
+  }, {});
+}
+
+function toPairs(object) {
+  return Object.entries(object);
+}
+
+function pickBy(object, callback) {
+  return Object.entries(object).reduce((acc, [key, value]) => {
+    if (callback(value)) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
 }
